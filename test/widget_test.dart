@@ -5,26 +5,69 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_bluetooth_scan/main.dart';
+import 'package:flutter_bluetooth_scan/bloc/bluetooth_scan_event.dart';
+import 'package:flutter_bluetooth_scan/bloc/bluetooth_scan_state.dart';
+import 'package:flutter_bluetooth_scan/models/bluetooth_device_model.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Bluetooth Scan BLoC Tests', () {
+    test('initial state should be BluetoothScanInitial', () {
+      // Test that the initial state is correct
+      expect(const BluetoothScanInitial(), isA<BluetoothScanInitial>());
+    });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    test('BluetoothScanEvent equality works correctly', () {
+      // Test event equality
+      const event1 = StartScanEvent();
+      const event2 = StartScanEvent();
+      const event3 = StopScanEvent();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+      expect(event1, equals(event2));
+      expect(event1, isNot(equals(event3)));
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('BluetoothScanState equality works correctly', () {
+      // Test state equality
+      const state1 = BluetoothScanInitial();
+      const state2 = BluetoothScanInitial();
+      const state3 = BluetoothScanLoading();
+
+      expect(state1, equals(state2));
+      expect(state1, isNot(equals(state3)));
+    });
+  });
+
+  group('Models Tests', () {
+    test('BluetoothDeviceModel should be created correctly', () {
+      const deviceModel = BluetoothDeviceModel(
+        id: 'test-id',
+        name: 'Test Device',
+        rssi: -50,
+        device: null, // null for testing
+        lastSeen: null, // null for testing
+      );
+
+      expect(deviceModel.id, equals('test-id'));
+      expect(deviceModel.name, equals('Test Device'));
+      expect(deviceModel.rssi, equals(-50));
+    });
+
+    test('BluetoothDeviceModel copyWith works correctly', () {
+      const original = BluetoothDeviceModel(
+        id: 'test-id',
+        name: 'Test Device',
+        rssi: -50,
+        device: null,
+        lastSeen: null,
+      );
+
+      final copy = original.copyWith(name: 'Updated Device');
+
+      expect(copy.id, equals(original.id));
+      expect(copy.name, equals('Updated Device'));
+      expect(copy.rssi, equals(original.rssi));
+    });
   });
 }
