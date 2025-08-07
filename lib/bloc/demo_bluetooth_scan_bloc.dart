@@ -86,9 +86,33 @@ class DemoBluetoothScanBloc extends Bloc<BluetoothScanEvent, BluetoothScanState>
   }
 
   void _startDemoScan(Emitter<BluetoothScanState> emit) {
-    int deviceIndex = 0;
+    // Vider d'abord la liste des appareils
+    _devices.clear();
     
-    _scanTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+    // Émettre l'état initial de scan
+    emit(const BluetoothScanScanning(
+      devices: [],
+      bluetoothState: null,
+    ));
+    
+    // Ajouter immédiatement le premier appareil
+    final firstDevice = BluetoothDeviceModel(
+      id: _demoDevices[0]['id'],
+      name: _demoDevices[0]['name'],
+      rssi: _simulateRssi(_demoDevices[0]['baseRssi']),
+      device: null,
+      lastSeen: DateTime.now(),
+    );
+    _devices[firstDevice.id] = firstDevice;
+    
+    emit(BluetoothScanScanning(
+      devices: [firstDevice],
+      bluetoothState: null,
+    ));
+    
+    // Continuer avec les autres appareils
+    int deviceIndex = 1;
+    _scanTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (deviceIndex < _demoDevices.length) {
         // Ajouter un nouvel appareil
         final demoDevice = _demoDevices[deviceIndex];
@@ -102,6 +126,17 @@ class DemoBluetoothScanBloc extends Bloc<BluetoothScanEvent, BluetoothScanState>
         
         _devices[device.id] = device;
         deviceIndex++;
+        
+        // Émettre immédiatement le nouvel état
+        if (!isClosed) {
+          final devicesList = _devices.values.toList()
+            ..sort((a, b) => b.rssi.compareTo(a.rssi));
+          
+          emit(BluetoothScanScanning(
+            devices: devicesList,
+            bluetoothState: null,
+          ));
+        }
       } else {
         // Mettre à jour les RSSI des appareils existants
         for (final deviceData in _demoDevices) {
@@ -113,29 +148,25 @@ class DemoBluetoothScanBloc extends Bloc<BluetoothScanEvent, BluetoothScanState>
             );
           }
         }
+        
+        // Émettre le nouvel état avec RSSI mis à jour
+        if (!isClosed) {
+          final devicesList = _devices.values.toList()
+            ..sort((a, b) => b.rssi.compareTo(a.rssi));
+            
+          emit(BluetoothScanScanning(
+            devices: devicesList,
+            bluetoothState: null,
+          ));
+        }
       }
 
-      // Émettre le nouvel état
-      if (!isClosed) {
-        emit(BluetoothScanScanning(
-          devices: _devices.values.toList()
-            ..sort((a, b) => b.rssi.compareTo(a.rssi)),
-          bluetoothState: null,
-        ));
-      }
-
-      // Arrêter automatiquement après 30 secondes
+      // Arrêter automatiquement après 15 secondes
       if (timer.tick >= 15) {
         timer.cancel();
         add(const StopScanEvent());
       }
     });
-
-    // Émettre l'état initial de scan
-    emit(const BluetoothScanScanning(
-      devices: [],
-      bluetoothState: null,
-    ));
   }
 
   int _simulateRssi(int baseRssi) {
@@ -149,9 +180,11 @@ class DemoBluetoothScanBloc extends Bloc<BluetoothScanEvent, BluetoothScanState>
   ) async {
     _scanTimer?.cancel();
     
-    emit(BluetoothScanStopped(
-      devices: _devices.values.toList()
-        ..sort((a, b) => b.rssi.compareTo(a.rssi)),
+    // Vider immédiatement la liste quand on arrête le scan
+    _devices.clear();
+    
+    emit(const BluetoothScanStopped(
+      devices: [],
       bluetoothState: null,
     ));
   }
