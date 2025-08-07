@@ -19,7 +19,7 @@ class BluetoothScanLoading extends BluetoothScanState {
 
 class BluetoothScanScanning extends BluetoothScanState {
   final List<BluetoothDeviceModel> devices;
-  final BluetoothAdapterState bluetoothState;
+  final BluetoothAdapterState? bluetoothState;
 
   const BluetoothScanScanning({
     required this.devices,
@@ -32,7 +32,7 @@ class BluetoothScanScanning extends BluetoothScanState {
 
 class BluetoothScanStopped extends BluetoothScanState {
   final List<BluetoothDeviceModel> devices;
-  final BluetoothAdapterState bluetoothState;
+  final BluetoothAdapterState? bluetoothState;
 
   const BluetoothScanStopped({
     required this.devices,
